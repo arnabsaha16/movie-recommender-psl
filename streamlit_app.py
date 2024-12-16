@@ -28,38 +28,35 @@ movies100_df['movie_id'] = 'm' + movies100_df['movie_id'].astype(str)
 #    return recommended_movie_ids
 
 def modified_myIBCF(newuser):
-    # Load the similarity matrix from Github (Process to generate by truncating the larger original similarity matrix is described in Python Notebook file)
+    # Load the similarity matrix from Github (the same one that was generated in the last step above)
     S_file = r'https://raw.githubusercontent.com/arnabsaha16/movie-recommender-psl/refs/heads/main/similarity_matrix_100movies.csv'
-    S = pd.read_csv(S_file, index_col=True, header=True)
+    S = pd.read_csv(S_file, index_col=0, header=0)
 
-    # Load the top 10 movies recommended by system 1 from Github (Refer Python Notebook file for steps to generate this)
+    # Load the top 10 movies recommended by system 1 from Github
     top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
     top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=0)
     
-    # Ensure newuser is a numpy array
-    w = np.array(newuser)
+    
+    # Ensure newuser is a numpy array and set the index same as Similarity Matrix
+    w = np.array(newuser).flatten()
     
     # Initialize the predictions array
     predictions = np.full(w.shape, np.nan)
    
     # Iterate over each movie (movie 'i' represents the movie for which predictions are being made)
     for i in range(len(w)):
-        if np.isnan(w[i]):
-            # Compute the numerator and denominator of the prediction formula
-            numerator = 0
-            denominator = 0
-            for j in range(len(w)): # Iterate over each movie 'j' with which similarity value for movie 'i' is not NA and being used for calculation
-                if not np.isnan(w[j]) and j != i:
-                    numerator += S.iloc[i, j] * w[j]
-                    denominator += S.iloc[i, j]
+        numerator = 0
+        denominator = 0
+        for j in range(len(w)): # Iterate over each movie 'j' with which similarity value for movie 'i' is not NA and being used for calculation
+            if not np.isnan(w[j]) and j != i and not np.isnan(S.iloc[i, j]):
+                numerator += S.iloc[i, j] * w[j]
+                denominator += S.iloc[i, j]
             
-            # Check for denominator being zero
-            if denominator != 0:
-                predictions[i] = numerator / denominator
-            else:
-                predictions[i] = np.nan
+        # Check for denominator being zero
+        if denominator != 0:
+            predictions[i] = numerator / denominator
         else:
-            predictions[i] = w[i]
+            predictions[i] = np.nan
     
     # Convert predictions array back to a Pandas Series for easier handling
     predictions_series = pd.Series(predictions, index=S.index)
@@ -109,7 +106,7 @@ st.markdown("""
         margin-bottom: 20px; /* Space between rows */ 
     }
     .movie-container { 
-        width: 30%; /* Increase the width for each movie container */ 
+        width: 40%; /* Increase the width for each movie container */ 
         text-align: top; 
     }
     .movie-title { 
@@ -126,6 +123,7 @@ st.markdown("""
 
 # Section 1: Display the movie list
 st.subheader('Movie List')
+st.text("Give your ratings to one or more movies below and click on 'Recommend' button at the end to see our recommendations for you.")
 cols = st.columns(5)
 
 ratings = {}
