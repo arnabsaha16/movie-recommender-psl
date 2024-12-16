@@ -22,10 +22,65 @@ movies100_df.loc[movies100_df['movie_id'].isin(id_100_movies), 'poster_url'] = p
 movies100_df['movie_id'] = 'm' + movies100_df['movie_id'].astype(str)
 
 # Function to simulate the myIBCF recommendation system
-def myIBCF(user_ratings):
+#def myIBCF(user_ratings):
     # Sample recommendation logic (Replace with your actual logic)
-    recommended_movie_ids = ['m2', 'm4', 'm6', 'm8', 'm10', 'm12', 'm14', 'm16', 'm18', 'm20']  # Example output
-    return recommended_movie_ids
+#    recommended_movie_ids = ['m2', 'm4', 'm6', 'm8', 'm10', 'm12', 'm14', 'm16', 'm18', 'm20']  # Example output
+#    return recommended_movie_ids
+
+def modified_myIBCF(newuser):
+    # Load the similarity matrix from Github (the same one that was generated in the last step above)
+    top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
+    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=0)
+    S_file = r'https://raw.githubusercontent.com/arnabsaha16/movie-recommender-psl/refs/heads/main/similarity_matrix_100movies.csv'
+    S = pd.read_csv(S_file, index_col=True, header=True)
+    
+    # Ensure newuser is a numpy array
+    w = np.array(newuser)
+    
+    # Initialize the predictions array
+    predictions = np.full(w.shape, np.nan)
+   
+    # Iterate over each movie (movie 'i' represents the movie for which predictions are being made)
+    for i in range(len(w)):
+        if np.isnan(w[i]):
+            # Compute the numerator and denominator of the prediction formula
+            numerator = 0
+            denominator = 0
+            for j in range(len(w)): # Iterate over each movie 'j' with which similarity value for movie 'i' is not NA and being used for calculation
+                if not np.isnan(w[j]) and j != i:
+                    numerator += S.iloc[i, j] * w[j]
+                    denominator += S.iloc[i, j]
+            
+            # Check for denominator being zero
+            if denominator != 0:
+                predictions[i] = numerator / denominator
+            else:
+                predictions[i] = np.nan
+        else:
+            predictions[i] = w[i]
+    
+    # Convert predictions array back to a Pandas Series for easier handling
+    predictions_series = pd.Series(predictions, index=S.index)
+    
+    # Get the top 10 recommendations
+    top_10_recommendations = predictions_series.sort_values(ascending=False).head(10)
+    ibcf_recommendations = top_10_recommendations.index.tolist()
+
+    # Check if the number of recommendations is less than 10
+    if len(ibcf_recommendations) < 10:
+        # Find the shortfall
+        shortfall = 10 - len(ibcf_recommendations)
+        
+        # Add movies from top10movies_system1 until ibcf_recommendations has 10 movie IDs 
+        index = 0
+        while shortfall > 0 and index < len(top10movies_system1):
+            movie = top10movies_system1[index]
+            if movie not in ibcf_recommendations:
+                ibcf_recommendations.append(movie)
+                shortfall -= 1
+                index += 1
+                
+    return ibcf_recommendations
 
 # Initialize the app
 st.title('Movie Recommendations')
@@ -91,7 +146,7 @@ user_ratings_vector = np.array([ratings.get(movie_id, np.nan) for movie_id in mo
 # Recommend button
 if st.button('Recommend'):
     # Get recommendations
-    recommended_movie_ids = myIBCF(user_ratings_vector)
+    recommended_movie_ids = modified_myIBCF(user_ratings_vector)
     
     # Get the recommended movies
     recommended_movies = movies100_df[movies100_df['movie_id'].isin(recommended_movie_ids)]
