@@ -32,9 +32,12 @@ def modified_myIBCF(newuser):
     top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
     top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=0)
     
-    
     # Ensure newuser is a numpy array and set the index same as Similarity Matrix
     w = np.array(newuser).flatten()
+
+    # Set user input rating values to np.nan if they are not 1, 2, 3, 4, or 5
+    valid_ratings = {1, 2, 3, 4, 5}
+    w = np.where(np.isin(w, list(valid_ratings)), w, np.nan)
     
     # Initialize the predictions array
     predictions = np.full(S.shape[0], np.nan)
