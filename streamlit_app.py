@@ -146,13 +146,6 @@ if st.button('Recommend'):
    
     # Get the recommended movies
     recommended_movies = movies_df[movies_df['movie_id'].isin(recommended_movie_ids)]
-
-    # Reset ratings in session state
-    for key in st.session_state['ratings'].keys(): 
-        st.session_state['ratings'][key] = "Rating not provided"
-
-    # Set ratings vector to blank
-    ratings = {}
     
     # Section 2: Display the recommended movies
     st.subheader('Recommended Movies')
