@@ -136,27 +136,32 @@ for idx, row in movies100_df.iterrows():
             ratings[row["movie_id"]] = np.nan if rating == "Rating not provided" else rating
 
 # Convert ratings to a (100,1) vector
-# user_ratings_vector = np.array([ratings[movie_id] for movie_id in movies_df['movie_id']]).reshape(-1, 1)
 user_ratings_vector = np.array([ratings.get(movie_id, np.nan) for movie_id in movies100_df['movie_id'].to_list()]).reshape(-1, 1)
 
 # Recommend button
 if st.button('Recommend'):
     # Get recommendations
-    recommended_movie_ids = modified_myIBCF(user_ratings_vector)
-   
-    # Get the recommended movies
-    recommended_movies = movies_df[movies_df['movie_id'].isin(recommended_movie_ids)]
     
+    recommended_movie_ids = modified_myIBCF(user_ratings_vector)
+
+    # Strip 'm' prefix and convert all recommended movie IDs to integers
+    recommended_movie_ids_int = [int(movie_id[1:]) for movie_id in recommended_movie_ids]
+
+    # Get the recommended movies
+    recommended_movies = movies_df[movies_df['movie_id'].isin(recommended_movie_ids_int)]
+
+    # Convert the movie_id back to 'm' prefixed strings
+    recommended_movies['movie_id'] = 'm' + recommended_movies['movie_id'].astype(str)
+  
     # Section 2: Display the recommended movies
     st.subheader('Recommended Movies')
     st.text('The following 10 movies are our recommendations based on your assigned ratings.')
-    cols = st.columns(5)
+    cols = st.columns(2)
     for idx, row in recommended_movies.iterrows():
-        with cols[idx % 5]:
-            #st.image(row["poster_url"], caption=f"{row['title']} ({row['movie_id']})", use_container_width=True)
+        with cols[idx % 2]:
             with st.container():
                 st.markdown(f""" 
-			        <div class="fixed-height"> 
-				        <img src="{row["poster_url"]}" alt="Movie Poster" style="width: 100%;"> 
+			        <div> 
+				        <img src="{row["poster_url"]}" alt="Movie Poster" style="width: 200%; height: 200%"> 
 				        <p>{row['title']} ({row['movie_id']})</p> 
 			        </div> """, unsafe_allow_html=True)
