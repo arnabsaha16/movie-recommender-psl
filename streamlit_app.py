@@ -25,21 +25,20 @@ movies100_df['movie_id'] = 'm' + movies100_df['movie_id'].astype(str)
 def modified_myIBCF(newuser):
     # Load the similarity matrix from Github (the same one that was generated in the last step above)
     S_file = r'https://raw.githubusercontent.com/arnabsaha16/movie-recommender-psl/refs/heads/main/similarity_matrix_100movies.csv'
-    S = pd.read_csv(S_file, index_col=0, header=0)
+    S = pd.read_csv(S_file, index_col=0, header=None)
 
     # Load the top 10 movies recommended by system 1 from Github
     top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
-    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=0)
-    
+    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=None)
     
     # Ensure newuser is a numpy array and set the index same as Similarity Matrix
     w = np.array(newuser).flatten()
     
     # Initialize the predictions array
-    predictions = np.full(w.shape, np.nan)
+    predictions = np.full(similarity_matrix_100movies.shape[0], np.nan)
    
     # Iterate over each movie (movie 'i' represents the movie for which predictions are being made)
-    for i in range(len(w)):
+    for i in range(len(predictions)):
         numerator = 0
         denominator = 0
         for j in range(len(w)): # Iterate over each movie 'j' with which similarity value for movie 'i' is not NA and being used for calculation
