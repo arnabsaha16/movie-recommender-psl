@@ -137,4 +137,4 @@ for idx, row in movies100_df.iterrows():
                 <div class="fixed-height"> 
                     <img src="{row["poster_url"]}" alt="Movie Poster" style="width: 100%;">
                     <p>{row['title']} ({row['movie_id']})</p> 
-                </div> """, unsafe_allow_html=True
+                </div> """, unsafe_allow_html=True)
