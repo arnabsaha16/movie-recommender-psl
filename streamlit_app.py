@@ -9,14 +9,15 @@ movie_column_names = ['movie_id', 'title', 'genres']
 url = 'https://liangfgithub.github.io/MovieData/movies.dat?raw=true'
 movies_df = pd.read_csv(url, sep='::', header=None, names=movie_column_names, engine='python', encoding='latin1')
 
-# Filter the above movies dataset to get the 100 movies and corresponding titles chosen for the app
+# Add poster image URLs from Github repository to movies_df dataframe
+movies_list = movies_df['movie_id'].to_list()
+poster_urls = [f"https://liangfgithub.github.io/MovieImages/{i}.jpg?raw=true" for i in movies_list]
+movies_df.loc[movies_df['movie_id'].isin(movies_list), 'poster_url'] = poster_urls
+
+# Filter the above movies dataset to get the 100 movies and corresponding titles/poster URLs chosen for display in Section 1
 id_100_movies = [i for i in range(1, 201) if i % 2 == 0]
 movies100_df = pd.DataFrame()
 movies100_df = movies_df[movies_df['movie_id'].isin(id_100_movies)].reset_index(drop=True)
-
-# Add poster image URLs from Github repository to movies100_df dataframe
-poster_urls = [f"https://github.com/arnabsaha16/movie-recommender-psl/blob/main/{i}.jpg?raw=true" for i in range(1, 201) if i % 2 == 0]
-movies100_df.loc[movies100_df['movie_id'].isin(id_100_movies), 'poster_url'] = poster_urls
 
 # Add 'm' as prefix to all movie_id values in movies100_df
 movies100_df['movie_id'] = 'm' + movies100_df['movie_id'].astype(str)
@@ -31,17 +32,19 @@ def modified_myIBCF(newuser):
     top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
     top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=None)
     
+    
     # Ensure newuser is a numpy array and set the index same as Similarity Matrix
     w = np.array(newuser).flatten()
     
     # Initialize the predictions array
-    predictions = np.full(similarity_matrix_100movies.shape[0], np.nan)
+    predictions = np.full(S.shape[0], np.nan)
    
     # Iterate over each movie (movie 'i' represents the movie for which predictions are being made)
     for i in range(len(predictions)):
         numerator = 0
         denominator = 0
-        for j in range(len(w)): # Iterate over each movie 'j' with which similarity value for movie 'i' is not NA and being used for calculation
+        # Iterate over each movie 'j' which has a non-NA rating from user & shares a non-NA similarity value with movie 'i'
+        for j in range(len(w)):
             if not np.isnan(w[j]) and j != i and not np.isnan(S.iloc[i, j]):
                 numerator += S.iloc[i, j] * w[j]
                 denominator += S.iloc[i, j]
@@ -142,14 +145,14 @@ if st.button('Recommend'):
     recommended_movie_ids = modified_myIBCF(user_ratings_vector)
    
     # Get the recommended movies
-    recommended_movies = movies100_df[movies100_df['movie_id'].isin(recommended_movie_ids)]
+    recommended_movies = movies_df[movies_df['movie_id'].isin(recommended_movie_ids)]
 
-    # Reset ratings in session state 
-    #for key in st.session_state['ratings'].keys(): 
-        #st.session_state['ratings'][key] = "Rating not provided"
+    # Reset ratings in session state
+    for key in st.session_state['ratings'].keys(): 
+        st.session_state['ratings'][key] = "Rating not provided"
 
     # Set ratings vector to blank
-    #ratings = {}
+    ratings = {}
     
     # Section 2: Display the recommended movies
     st.subheader('Recommended Movies')
