@@ -22,19 +22,14 @@ movies100_df.loc[movies100_df['movie_id'].isin(id_100_movies), 'poster_url'] = p
 movies100_df['movie_id'] = 'm' + movies100_df['movie_id'].astype(str)
 
 # Function to simulate the myIBCF recommendation system
-#def myIBCF(user_ratings):
-    # Sample recommendation logic (Replace with your actual logic)
-#    recommended_movie_ids = ['m2', 'm4', 'm6', 'm8', 'm10', 'm12', 'm14', 'm16', 'm18', 'm20']  # Example output
-#    return recommended_movie_ids
-
 def modified_myIBCF(newuser):
     # Load the similarity matrix from Github (the same one that was generated in the last step above)
     S_file = r'https://raw.githubusercontent.com/arnabsaha16/movie-recommender-psl/refs/heads/main/similarity_matrix_100movies.csv'
-    S = pd.read_csv(S_file, index_col=0, header=0)
+    S = pd.read_csv(S_file, index_col=0, header=None)
 
     # Load the top 10 movies recommended by system 1 from Github
     top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
-    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=0)
+    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=None)
     
     
     # Ensure newuser is a numpy array and set the index same as Similarity Matrix
@@ -135,7 +130,6 @@ for idx, row in movies100_df.iterrows():
 				    <img src="{row["poster_url"]}" alt="Movie Poster" style="width: 100%;">
                     <p>{row['title']} ({row['movie_id']})</p> 
 			    </div> """, unsafe_allow_html=True)
-            #st.image(row["poster_url"], caption=f"{row['title']} ({row['movie_id']})", use_container_width=True)
             rating = st.radio('Rate the above movie', options=["Rating not provided", 1, 2, 3, 4, 5], index=0, key=f'rating_{row["movie_id"]}')
             ratings[row["movie_id"]] = np.nan if rating == "Rating not provided" else rating
 
@@ -147,12 +141,20 @@ user_ratings_vector = np.array([ratings.get(movie_id, np.nan) for movie_id in mo
 if st.button('Recommend'):
     # Get recommendations
     recommended_movie_ids = modified_myIBCF(user_ratings_vector)
-    
+   
     # Get the recommended movies
     recommended_movies = movies100_df[movies100_df['movie_id'].isin(recommended_movie_ids)]
+
+    # Reset ratings in session state 
+    for key in st.session_state['ratings'].keys(): 
+        st.session_state['ratings'][key] = "Rating not provided"
+
+    # Set ratings vector to blank
+    ratings = {}
     
     # Section 2: Display the recommended movies
     st.subheader('Recommended Movies')
+    st.text('The following 10 movies are our recommendations based on your assigned ratings.')
     cols = st.columns(5)
     for idx, row in recommended_movies.iterrows():
         with cols[idx % 5]:
