@@ -26,11 +26,11 @@ movies100_df['movie_id'] = 'm' + movies100_df['movie_id'].astype(str)
 def modified_myIBCF(newuser):
     # Load the similarity matrix from Github (the same one that was generated in the last step above)
     S_file = r'https://raw.githubusercontent.com/arnabsaha16/movie-recommender-psl/refs/heads/main/similarity_matrix_100movies.csv'
-    S = pd.read_csv(S_file, index_col=0, header=None)
+    S = pd.read_csv(S_file, index_col=0, header=0)
 
     # Load the top 10 movies recommended by system 1 from Github
     top10movies_system1_file = r'https://github.com/arnabsaha16/movie-recommender-psl/raw/refs/heads/main/top_movies_system1.csv'
-    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=None)
+    top10movies_system1 = pd.read_csv(top10movies_system1_file, index_col=0, header=0)
     
     
     # Ensure newuser is a numpy array and set the index same as Similarity Matrix
